@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,27 @@
  * THE SOFTWARE.
  */
 
-#ifndef __RBTREE_COMMON_TREEVALIDATION_H__
-#define __RBTREE_COMMON_TREEVALIDATION_H__
+#ifndef __AVLTREE_COMMON_TREEVALIDATION_H__
+#define __AVLTREE_COMMON_TREEVALIDATION_H__
 
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 
-struct min_max_depth {
-	size_t min;
-	size_t max;
-	size_t black_min;
-	size_t black_max;
-};
-
-static __inline__ void check_node_order(struct rb_node *node,
-					struct rb_node *parent,
+static __inline__ void check_node_order(struct avl_node *node,
+					struct avl_node *parent,
 					const uint8_t *skiplist, uint16_t *pos,
 					uint16_t size)
 {
-	struct rbitem *item;
+	struct avlitem *item;
 
 	if (!node)
 		return;
 
-	assert(rb_parent(node) == parent);
+	assert(avl_parent(node) == parent);
 
 	check_node_order(node->left, node, skiplist, pos, size);
 
@@ -56,14 +49,14 @@ static __inline__ void check_node_order(struct rb_node *node,
 		(*pos)++;
 	assert(*pos < size);
 
-	item = rb_entry(node, struct rbitem, rb);
+	item = avl_entry(node, struct avlitem, avl);
 	assert(item->i == *pos);
 	(*pos)++;
 
 	check_node_order(node->right, node, skiplist, pos, size);
 }
 
-static __inline__ void check_root_order(const struct rb_root *root,
+static __inline__ void check_root_order(const struct avl_root *root,
 					const uint8_t *skiplist, uint16_t size)
 {
 	uint16_t pos = 0;
@@ -76,94 +69,44 @@ static __inline__ void check_root_order(const struct rb_root *root,
 	assert(size == pos);
 }
 
-static __inline__ struct min_max_depth
-get_min_max_node(const struct rb_node *node)
+static __inline__ size_t check_depth_node(const struct avl_node *node)
 {
-	struct min_max_depth depth = {1, 1, 1, 1};
-	struct min_max_depth depth_left, depth_right;
-	size_t blackcnt;
+	size_t depth_left;
+	size_t depth_right;
+	size_t depth_min;
+	size_t depth_max;
 
 	if (!node)
-		return depth;
+		return 0;
 
-	depth_left = get_min_max_node(node->left);
-	depth_right = get_min_max_node(node->right);
+	depth_left = check_depth_node(node->left);
+	depth_right = check_depth_node(node->right);
 
-	/* count all nodes */
-	assert(depth_left.min * 2 >= depth_left.max);
-	assert(depth_right.min * 2 >= depth_right.max);
-
-	if (depth_left.min < depth_right.min)
-		depth.min = depth_left.min + 1;
-	else
-		depth.min = depth_right.min + 1;
-
-	if (depth_left.max > depth_right.max)
-		depth.max = depth_left.max + 1;
-	else
-		depth.max = depth_right.max + 1;
-
-	/* only count black nodes */
-	assert(depth_left.black_min == depth_left.black_max);
-	assert(depth_right.black_min == depth_right.black_max);
-
-	if (rb_color(node) == RB_BLACK)
-		blackcnt = 1;
-	else
-		blackcnt = 0;
-
-	if (depth_left.black_min < depth_right.black_min)
-		depth.black_min = depth_left.black_min + blackcnt;
-	else
-		depth.black_min = depth_right.black_min + blackcnt;
-
-	if (depth_left.black_max > depth_right.black_max)
-		depth.black_max = depth_left.black_max + blackcnt;
-	else
-		depth.black_max = depth_right.black_max + blackcnt;
-
-	return depth;
-}
-
-static __inline__ struct min_max_depth
-get_min_max_root(const struct rb_root *root)
-{
-	return get_min_max_node(root->node);
-}
-
-static __inline__ void check_depth(const struct rb_root *root)
-{
-	struct min_max_depth depths;
-
-	depths = get_min_max_root(root);
-	assert(depths.min * 2 >= depths.max);
-	assert(depths.black_min == depths.black_max);
-}
-
-static __inline__ void check_llrb_node(const struct rb_node *node)
-{
-	if (!node)
-		return;
-
-	/* no two consecutive red */
-	if (rb_color(node) == RB_RED) {
-		assert(!node->left || rb_color(node->left) == RB_BLACK);
-		assert(!node->right || rb_color(node->right) == RB_BLACK);
+	if (depth_right > depth_left) {
+		depth_min = depth_left;
+		depth_max = depth_right;
+	} else {
+		depth_min = depth_right;
+		depth_max = depth_left;
 	}
 
-	/* left leaning red black */
-	assert(!node->right || rb_color(node->right) == RB_BLACK);
+	assert(depth_max - depth_min <= 1);
 
-	check_llrb_node(node->left);
-	check_llrb_node(node->right);
+	if (depth_left == depth_right) {
+		assert(avl_balance(node) == AVL_NEUTRAL);
+	} else {
+		if (depth_left < depth_right)
+			assert(avl_balance(node) == AVL_RIGHT);
+		else
+			assert(avl_balance(node) == AVL_LEFT);
+	}
+
+	return depth_max + 1;
 }
 
-static __inline__ void check_llrb_nodes(const struct rb_root *root)
+static __inline__ void check_depth(const struct avl_root *root)
 {
-	if (root->node)
-		assert(rb_color(root->node) == RB_BLACK);
-
-	check_llrb_node(root->node);
+	check_depth_node(root->node);
 }
 
-#endif /* __RBTREE_COMMON_TREEVALIDATION_H__ */
+#endif /* __AVLTREE_COMMON_TREEVALIDATION_H__ */

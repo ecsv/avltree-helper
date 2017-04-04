@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,13 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 #include "common-treeops.h"
 #include "common-treevalidation.h"
@@ -38,39 +39,40 @@ static uint8_t skiplist[ARRAY_SIZE(values)];
 
 int main(void)
 {
-	struct rb_root root;
+	struct avl_root root;
 	size_t i, j;
-	struct rbitem *item;
+	struct avlitem *item;
+	bool removed_right;
 
 	for (i = 0; i < 256; i++) {
 		random_shuffle_array(values, (uint16_t)ARRAY_SIZE(values));
 		memset(skiplist, 1, sizeof(skiplist));
 
-		INIT_RB_ROOT(&root);
+		INIT_AVL_ROOT(&root);
 		for (j = 0; j < ARRAY_SIZE(values); j++) {
-			item = (struct rbitem *)malloc(sizeof(*item));
+			item = (struct avlitem *)malloc(sizeof(*item));
 			assert(item);
 
 			item->i = values[j];
-			rbitem_insert_unbalanced(&root, item);
+			avlitem_insert_unbalanced(&root, item);
 			skiplist[values[j]] = 0;
 		}
 
 		random_shuffle_array(delete_items, (uint16_t)ARRAY_SIZE(delete_items));
 		for (j = 0; j < ARRAY_SIZE(delete_items); j++) {
-			item = rbitem_find(&root, delete_items[j]);
+			item = avlitem_find(&root, delete_items[j]);
 
 			assert(item);
 			assert(item->i == delete_items[j]);
 
-			rb_erase_node(&item->rb, &root);
+			avl_erase_node(&item->avl, &root, &removed_right);
 			skiplist[item->i] = 1;
 			free(item);
 
 			check_root_order(&root, skiplist,
 					(uint16_t)ARRAY_SIZE(skiplist));
 		}
-		assert(rb_empty(&root));
+		assert(avl_empty(&root));
 	}
 
 	return 0;

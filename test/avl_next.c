@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,14 +22,50 @@
  */
 
 #include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
+#include "common.h"
+#include "common-treeops.h"
 
-static DEFINE_RBROOT(testtree);
+static uint16_t values[256];
+
+static struct avlitem items[ARRAY_SIZE(values)];
 
 int main(void)
 {
-	assert(rb_empty(&testtree));
+	struct avl_root root;
+	struct avl_node *node;
+	struct avlitem *item;
+	size_t i, j;
+
+	INIT_AVL_ROOT(&root);
+	items[0].i = 0;
+	avlitem_insert_unbalanced(&root, &items[0]);
+	assert(avl_next(&items[0].avl) == NULL);
+
+	for (i = 0; i < 256; i++) {
+		random_shuffle_array(values, (uint16_t)ARRAY_SIZE(values));
+
+		INIT_AVL_ROOT(&root);
+		node = avl_first(&root);
+		assert(!node);
+
+		for (j = 0; j < ARRAY_SIZE(values); j++) {
+			items[j].i = values[j];
+			avlitem_insert_unbalanced(&root, &items[j]);
+		}
+
+		for (node = avl_first(&root), j = 0;
+		     node;
+		     j++, node = avl_next(node)) {
+			item = avl_entry(node, struct avlitem, avl);
+			assert(item->i == j);
+		}
+		assert(j == ARRAY_SIZE(values));
+		assert(!node);
+	}
 
 	return 0;
 }

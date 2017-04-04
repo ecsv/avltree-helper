@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 #include "common-prioqueue.h"
 
@@ -59,9 +59,9 @@ static uint16_t valuequeue_getmin(void)
 
 int main(void)
 {
-	struct rb_prioqueue queue;
+	struct avl_prioqueue queue;
 	size_t i;
-	struct rbitem *item;
+	struct avlitem *item;
 	uint16_t operation;
 
 	for (i = 0; i < 256; i++) {
@@ -69,7 +69,7 @@ int main(void)
 		inserted = 0;
 		queuelen = 0;
 
-		rb_prioqueue_init(&queue);
+		avl_prioqueue_init(&queue);
 		while (inserted < ARRAY_SIZE(values) ||
 		       queuelen != 0) {
 
@@ -79,17 +79,17 @@ int main(void)
 				operation = get_unsigned16() % 2;
 
 			if (operation == 1) {
-				item = (struct rbitem *)malloc(sizeof(*item));
+				item = (struct avlitem *)malloc(sizeof(*item));
 				assert(item);
 
 				item->i = values[inserted];
-				rb_prioqueue_insert_unbalanced(&queue, item);
+				avl_prioqueue_insert_unbalanced(&queue, item);
 
 				valuequeue[queuelen] = values[inserted];
 				inserted++;
 				queuelen++;
 			} else {
-				item = rb_prioqueue_pop_unbalanced(&queue);
+				item = avl_prioqueue_pop_unbalanced(&queue);
 
 				if (queuelen) {
 					assert(item);
@@ -103,7 +103,7 @@ int main(void)
 
 			}
 		}
-		assert(rb_empty(&queue.root));
+		assert(avl_empty(&queue.root));
 	}
 
 	return 0;

@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,36 +21,37 @@
  * THE SOFTWARE.
  */
 
-#ifndef __RBTREE_COMMON_PRIOQUEUE_H__
-#define __RBTREE_COMMON_PRIOQUEUE_H__
+#ifndef __AVLTREE_COMMON_PRIOQUEUE_H__
+#define __AVLTREE_COMMON_PRIOQUEUE_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 
-struct rb_prioqueue {
-	struct rb_root root;
-	struct rb_node *min_node;
+struct avl_prioqueue {
+	struct avl_root root;
+	struct avl_node *min_node;
 };
 
-static __inline__ void rb_prioqueue_init(struct rb_prioqueue *queue)
+static __inline__ void avl_prioqueue_init(struct avl_prioqueue *queue)
 {
-	INIT_RB_ROOT(&queue->root);
+	INIT_AVL_ROOT(&queue->root);
 	queue->min_node = NULL;
 }
 
 static __inline__ void
-rb_prioqueue_insert_unbalanced(struct rb_prioqueue *queue,
-			       struct rbitem *new_entry)
+avl_prioqueue_insert_unbalanced(struct avl_prioqueue *queue,
+				struct avlitem *new_entry)
 {
-	struct rb_node *parent = NULL;
-	struct rb_node **cur_nodep = &queue->root.node;
-	struct rbitem *cur_entry;
+	struct avl_node *parent = NULL;
+	struct avl_node **cur_nodep = &queue->root.node;
+	struct avlitem *cur_entry;
 	int isminimal = 1;
 
 	while (*cur_nodep) {
-		cur_entry = rb_entry(*cur_nodep, struct rbitem, rb);
+		cur_entry = avl_entry(*cur_nodep, struct avlitem, avl);
 
 		parent = *cur_nodep;
 		if (cmpint(&new_entry->i, &cur_entry->i) <= 0) {
@@ -62,38 +63,39 @@ rb_prioqueue_insert_unbalanced(struct rb_prioqueue *queue,
 	}
 
 	if (isminimal)
-		queue->min_node = &new_entry->rb;
+		queue->min_node = &new_entry->avl;
 
-	rb_link_node(&new_entry->rb, parent, cur_nodep);
+	avl_link_node(&new_entry->avl, parent, cur_nodep);
 }
 
-static __inline__ struct rbitem *
-rb_prioqueue_pop_unbalanced(struct rb_prioqueue *queue)
+static __inline__ struct avlitem *
+avl_prioqueue_pop_unbalanced(struct avl_prioqueue *queue)
 {
-	struct rbitem *item;
+	struct avlitem *item;
+	bool removed_right;
 
 	if (!queue->min_node)
 		return NULL;
 
-	item = rb_entry(queue->min_node, struct rbitem, rb);
-	queue->min_node = rb_next(queue->min_node);
+	item = avl_entry(queue->min_node, struct avlitem, avl);
+	queue->min_node = avl_next(queue->min_node);
 
-	rb_erase_node(&item->rb, &queue->root);
+	avl_erase_node(&item->avl, &queue->root, &removed_right);
 
 	return item;
 }
 
 static __inline__ void
-rb_prioqueue_insert_balanced(struct rb_prioqueue *queue,
-			       struct rbitem *new_entry)
+avl_prioqueue_insert_balanced(struct avl_prioqueue *queue,
+			      struct avlitem *new_entry)
 {
-	struct rb_node *parent = NULL;
-	struct rb_node **cur_nodep = &queue->root.node;
-	struct rbitem *cur_entry;
+	struct avl_node *parent = NULL;
+	struct avl_node **cur_nodep = &queue->root.node;
+	struct avlitem *cur_entry;
 	int isminimal = 1;
 
 	while (*cur_nodep) {
-		cur_entry = rb_entry(*cur_nodep, struct rbitem, rb);
+		cur_entry = avl_entry(*cur_nodep, struct avlitem, avl);
 
 		parent = *cur_nodep;
 		if (cmpint(&new_entry->i, &cur_entry->i) <= 0) {
@@ -105,25 +107,25 @@ rb_prioqueue_insert_balanced(struct rb_prioqueue *queue,
 	}
 
 	if (isminimal)
-		queue->min_node = &new_entry->rb;
+		queue->min_node = &new_entry->avl;
 
-	rb_insert(&new_entry->rb, parent, cur_nodep, &queue->root);
+	avl_insert(&new_entry->avl, parent, cur_nodep, &queue->root);
 }
 
-static __inline__ struct rbitem *
-rb_prioqueue_pop_balanced(struct rb_prioqueue *queue)
+static __inline__ struct avlitem *
+avl_prioqueue_pop_balanced(struct avl_prioqueue *queue)
 {
-	struct rbitem *item;
+	struct avlitem *item;
 
 	if (!queue->min_node)
 		return NULL;
 
-	item = rb_entry(queue->min_node, struct rbitem, rb);
-	queue->min_node = rb_next(queue->min_node);
+	item = avl_entry(queue->min_node, struct avlitem, avl);
+	queue->min_node = avl_next(queue->min_node);
 
-	rb_erase(&item->rb, &queue->root);
+	avl_erase(&item->avl, &queue->root);
 
 	return item;
 }
 
-#endif /* __RBTREE_COMMON_PRIOQUEUE_H__ */
+#endif /* __AVLTREE_COMMON_PRIOQUEUE_H__ */

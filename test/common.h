@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,19 @@
  * THE SOFTWARE.
  */
 
-#ifndef __RBTREE_COMMON_H__
-#define __RBTREE_COMMON_H__
+#ifndef __AVLTREE_COMMON_H__
+#define __AVLTREE_COMMON_H__
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
-struct rbitem {
+struct avlitem {
 	uint16_t i;
-	struct rb_node rb;
+	struct avl_node avl;
 };
 
 static __inline__ uint8_t getnum(void)
@@ -88,4 +88,4 @@ static __inline__ void random_shuffle_array(uint16_t *operations, uint16_t len)
 	}
 }
 
-#endif /* __RBTREE_COMMON_H__ */
+#endif /* __AVLTREE_COMMON_H__ */

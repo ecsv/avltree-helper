@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 #
-# Minimal red-black-tree helper functions test
+# Minimal AVL-tree helper functions test
 #
-# Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+# Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,22 +25,22 @@
 
 TESTS_CXX_COMPATIBLE = \
  containerof \
- rb_entry \
- rb_init-explicit \
- rb_init-local \
- rb_init-global \
- rb_link_node \
- rb_erase_node \
- rb_first \
- rb_last \
- rb_next \
- rb_prev \
- rb_link_node-prioqueue \
- rb_erase_node-prioqueue \
- rb_insert_color \
- rb_erase \
- rb_insert-prioqueue \
- rb_erase-prioqueue \
+ avl_entry \
+ avl_init-explicit \
+ avl_init-local \
+ avl_init-global \
+ avl_link_node \
+ avl_erase_node \
+ avl_first \
+ avl_last \
+ avl_next \
+ avl_prev \
+ avl_link_node-prioqueue \
+ avl_erase_node-prioqueue \
+ avl_insert_balance \
+ avl_erase \
+ avl_insert-prioqueue \
+ avl_erase-prioqueue \
 
 TESTS_C_ONLY = \
 
@@ -94,17 +94,17 @@ $(TESTS_OK): %.ok: %
 .c.o:
 	$(COMPILE.c) -o $@ $<
 
-rbtree.o: ../rbtree.c
+avltree.o: ../avltree.c
 	$(COMPILE.c) -o $@ $<
 
-$(TESTS): %: %.o rbtree.o
+$(TESTS): %: %.o avltree.o
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
 clean:
-	@$(RM) $(TESTS_ALL) $(DEP) $(TESTS_OK) $(TESTS:=.o) $(TESTS:=.d) rbtree.o rbtree.d
+	@$(RM) $(TESTS_ALL) $(DEP) $(TESTS_OK) $(TESTS:=.o) $(TESTS:=.d) avltree.o avltree.d
 
 # load dependencies
-DEP = $(TESTS:=.d)
+DEP = $(TESTS:=.d) avltree.d
 -include $(DEP)
 
 .PHONY: all clean

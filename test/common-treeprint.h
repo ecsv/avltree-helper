@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,39 +21,46 @@
  * THE SOFTWARE.
  */
 
-#ifndef __RBTREE_COMMON_TREEPRINT_H__
-#define __RBTREE_COMMON_TREEPRINT_H__
+#ifndef __AVLTREE_COMMON_TREEPRINT_H__
+#define __AVLTREE_COMMON_TREEPRINT_H__
 
 #include <stdio.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 
-static __inline__ void printnode(const struct rb_node *node, size_t depth,
+static __inline__ void printnode(const struct avl_node *node, size_t depth,
 				 char prefix)
 {
-	const struct rbitem *item;
+	const struct avlitem *item;
 	size_t i;
 
 	if (!node) {
 		for (i = 0; i < depth; i++)
 			printf("     ");
 
-		printf("%cB-\n", prefix);
+		printf("%c=\n", prefix);
 		return;
 	}
 
-	item = rb_entry(node, struct rbitem, rb);
+	item = avl_entry(node, struct avlitem, avl);
 
 	printnode(node->right, depth+1, '/');
 
 	for (i = 0; i < depth; i++)
 		printf("     ");
 
-	if (rb_color(node) == RB_RED)
-		printf("%cr", prefix);
-	else
-		printf("%cB", prefix);
+	switch (avl_balance(node)) {
+	case AVL_NEUTRAL:
+		printf("%c=", prefix);
+		break;
+	case AVL_LEFT:
+		printf("%c-", prefix);
+		break;
+	case AVL_RIGHT:
+		printf("%c+", prefix);
+		break;
+	};
 
 	printf("%03u\n", item->i);
 
@@ -61,34 +68,48 @@ static __inline__ void printnode(const struct rb_node *node, size_t depth,
 
 }
 
-static __inline__ void printtree(const struct rb_root *root)
+static __inline__ void printtree(const struct avl_root *root)
 {
 	printnode(root->node, 0, '*');
 }
 
-static __inline__ void printnode_dot(const struct rb_node *node,
+static __inline__ void printnode_dot(const struct avl_node *node,
 				     size_t *nilcnt)
 {
-	const struct rbitem *item;
-	const struct rbitem *citem;
+	const struct avlitem *item;
+	const struct avlitem *citem;
 	const char *color;
 
 	if (!node)
 		return;
 
-	item = rb_entry(node, struct rbitem, rb);
-	if (rb_color(node) == RB_RED)
-		color = "red";
-	else
+	item = avl_entry(node, struct avlitem, avl);
+	switch (avl_balance(node)) {
+	case AVL_NEUTRAL:
 		color = "black";
+		break;
+	case AVL_LEFT:
+		color = "red";
+		break;
+	case AVL_RIGHT:
+		color = "green";
+		break;
+	};
 	printf("%03u [color=\"%s\"];\n", item->i, color);
 
 	if (node->left) {
-		citem = rb_entry(node->left, struct rbitem, rb);
-		if (rb_color(node->left) == RB_RED)
-			color = "red";
-		else
+		citem = avl_entry(node->left, struct avlitem, avl);
+		switch (avl_balance(node)) {
+		case AVL_NEUTRAL:
 			color = "black";
+			break;
+		case AVL_LEFT:
+			color = "red";
+			break;
+		case AVL_RIGHT:
+			color = "black";
+			break;
+		};
 
 		printf("%03u:sw -> %03u [color=\"%s\"];\n", item->i, citem->i,
 		       color);
@@ -102,11 +123,18 @@ static __inline__ void printnode_dot(const struct rb_node *node,
 	}
 
 	if (node->right) {
-		citem = rb_entry(node->right, struct rbitem, rb);
-		if (rb_color(node->right) == RB_RED)
-			color = "red";
-		else
+		citem = avl_entry(node->right, struct avlitem, avl);
+		switch (avl_balance(node)) {
+		case AVL_NEUTRAL:
 			color = "black";
+			break;
+		case AVL_LEFT:
+			color = "black";
+			break;
+		case AVL_RIGHT:
+			color = "green";
+			break;
+		};
 
 		printf("%03u:se -> %03u [color=\"%s\"];\n", item->i, citem->i,
 			color);
@@ -123,7 +151,7 @@ static __inline__ void printnode_dot(const struct rb_node *node,
 	printnode_dot(node->right, nilcnt);
 }
 
-static __inline__ void printtree_dot(const struct rb_root *root)
+static __inline__ void printtree_dot(const struct avl_root *root)
 {
 	size_t nilcnt = 0;
 
@@ -135,4 +163,4 @@ static __inline__ void printtree_dot(const struct rb_root *root)
 	printf("}\n");
 }
 
-#endif /* __RBTREE_COMMON_TREEPRINT_H__ */
+#endif /* __AVLTREE_COMMON_TREEPRINT_H__ */

@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,14 +23,14 @@
 
 #include <assert.h>
 
-#include "../rbtree.h"
-#include "common.h"
+#include "../avltree.h"
 
 int main(void)
 {
-	struct rbitem item;
+	struct avl_root testtree;
 
-	assert(&item == rb_entry(&item.rb, struct rbitem, rb));
+	INIT_AVL_ROOT(&testtree);
+	assert(avl_empty(&testtree));
 
 	return 0;
 }

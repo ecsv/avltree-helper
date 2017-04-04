@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 #include "common-prioqueue.h"
 
@@ -34,30 +34,30 @@ static uint16_t values[256];
 
 int main(void)
 {
-	struct rb_prioqueue queue;
+	struct avl_prioqueue queue;
 	size_t i, j;
-	struct rbitem *item;
+	struct avlitem *item;
 
 	for (i = 0; i < 256; i++) {
 		random_shuffle_array(values, (uint16_t)ARRAY_SIZE(values));
 
-		rb_prioqueue_init(&queue);
+		avl_prioqueue_init(&queue);
 		for (j = 0; j < ARRAY_SIZE(values); j++) {
-			item = (struct rbitem *)malloc(sizeof(*item));
+			item = (struct avlitem *)malloc(sizeof(*item));
 			assert(item);
 
 			item->i = values[j];
-			rb_prioqueue_insert_unbalanced(&queue, item);
+			avl_prioqueue_insert_unbalanced(&queue, item);
 		}
 
 		for (j = 0; j < ARRAY_SIZE(values); j++) {
-			item = rb_prioqueue_pop_unbalanced(&queue);
+			item = avl_prioqueue_pop_unbalanced(&queue);
 			assert(item);
 			assert(item->i == j);
 
 			free(item);
 		}
-		assert(rb_empty(&queue.root));
+		assert(avl_empty(&queue.root));
 	}
 
 	return 0;

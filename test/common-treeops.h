@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,24 +21,24 @@
  * THE SOFTWARE.
  */
 
-#ifndef __RBTREE_COMMON_TREEOPS_H__
-#define __RBTREE_COMMON_TREEOPS_H__
+#ifndef __AVLTREE_COMMON_TREEOPS_H__
+#define __AVLTREE_COMMON_TREEOPS_H__
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 
-static __inline__ void rbitem_insert_unbalanced(struct rb_root *root,
-						struct rbitem *new_entry)
+static __inline__ void avlitem_insert_unbalanced(struct avl_root *root,
+						 struct avlitem *new_entry)
 {
-	struct rb_node *parent = NULL;
-	struct rb_node **cur_nodep = &root->node;
-	struct rbitem *cur_entry;
+	struct avl_node *parent = NULL;
+	struct avl_node **cur_nodep = &root->node;
+	struct avlitem *cur_entry;
 
 	while (*cur_nodep) {
-		cur_entry = rb_entry(*cur_nodep, struct rbitem, rb);
+		cur_entry = avl_entry(*cur_nodep, struct avlitem, avl);
 
 		parent = *cur_nodep;
 		if (cmpint(&new_entry->i, &cur_entry->i) <= 0)
@@ -47,24 +47,25 @@ static __inline__ void rbitem_insert_unbalanced(struct rb_root *root,
 			cur_nodep = &((*cur_nodep)->right);
 	}
 
-	rb_link_node(&new_entry->rb, parent, cur_nodep);
+	avl_link_node(&new_entry->avl, parent, cur_nodep);
 }
 
-static __inline__ void rbitem_insert_balanced(struct rb_root *root,
-					      struct rbitem *new_entry)
+static __inline__ void avlitem_insert_balanced(struct avl_root *root,
+					       struct avlitem *new_entry)
 {
-	rbitem_insert_unbalanced(root, new_entry);
-	rb_insert_color(&new_entry->rb, root);
+	avlitem_insert_unbalanced(root, new_entry);
+	avl_insert_balance(&new_entry->avl, root);
 }
 
-static __inline__ struct rbitem *rbitem_find(struct rb_root *root, uint16_t x)
+static __inline__ struct avlitem *avlitem_find(struct avl_root *root,
+					       uint16_t x)
 {
-	struct rb_node **cur_nodep = &root->node;
-	struct rbitem *cur_entry;
+	struct avl_node **cur_nodep = &root->node;
+	struct avlitem *cur_entry;
 	int res;
 
 	while (*cur_nodep) {
-		cur_entry = rb_entry(*cur_nodep, struct rbitem, rb);
+		cur_entry = avl_entry(*cur_nodep, struct avlitem, avl);
 
 		res = cmpint(&x, &cur_entry->i);
 		if (res == 0)
@@ -79,4 +80,4 @@ static __inline__ struct rbitem *rbitem_find(struct rb_root *root, uint16_t x)
 	return NULL;
 }
 
-#endif /* __RBTREE_COMMON_TREEOPS_H__ */
+#endif /* __AVLTREE_COMMON_TREEOPS_H__ */

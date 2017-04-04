@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,47 +24,54 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "../rbtree.h"
+#include "../avltree.h"
 #include "common.h"
 #include "common-treeops.h"
+#include "common-treevalidation.h"
 
 static uint16_t values[256];
-
-static struct rbitem items[ARRAY_SIZE(values)];
+static uint16_t delete_items[ARRAY_SIZE(values)];
+static uint8_t skiplist[ARRAY_SIZE(values)];
 
 int main(void)
 {
-	struct rb_root root;
-	struct rb_node *node;
-	struct rbitem *item;
+	struct avl_root root;
 	size_t i, j;
-
-	INIT_RB_ROOT(&root);
-	items[0].i = 0;
-	rbitem_insert_unbalanced(&root, &items[0]);
-	assert(rb_next(&items[0].rb) == NULL);
+	struct avlitem *item;
 
 	for (i = 0; i < 256; i++) {
 		random_shuffle_array(values, (uint16_t)ARRAY_SIZE(values));
+		memset(skiplist, 1, sizeof(skiplist));
 
-		INIT_RB_ROOT(&root);
-		node = rb_first(&root);
-		assert(!node);
-
+		INIT_AVL_ROOT(&root);
 		for (j = 0; j < ARRAY_SIZE(values); j++) {
-			items[j].i = values[j];
-			rbitem_insert_unbalanced(&root, &items[j]);
+			item = (struct avlitem *)malloc(sizeof(*item));
+			assert(item);
+
+			item->i = values[j];
+			avlitem_insert_balanced(&root, item);
+			skiplist[values[j]] = 0;
 		}
 
-		for (node = rb_first(&root), j = 0;
-		     node;
-		     j++, node = rb_next(node)) {
-			item = rb_entry(node, struct rbitem, rb);
-			assert(item->i == j);
+		random_shuffle_array(delete_items, (uint16_t)ARRAY_SIZE(delete_items));
+		for (j = 0; j < ARRAY_SIZE(delete_items); j++) {
+			item = avlitem_find(&root, delete_items[j]);
+
+			assert(item);
+			assert(item->i == delete_items[j]);
+
+			avl_erase(&item->avl, &root);
+			skiplist[item->i] = 1;
+			free(item);
+
+			check_root_order(&root, skiplist,
+					(uint16_t)ARRAY_SIZE(skiplist));
+			check_depth(&root);
 		}
-		assert(j == ARRAY_SIZE(values));
-		assert(!node);
+		assert(avl_empty(&root));
 	}
 
 	return 0;

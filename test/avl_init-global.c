@@ -1,6 +1,6 @@
-/* Minimal red-black-tree helper functions test
+/* Minimal AVL-tree helper functions test
  *
- * Copyright (c) 2012-2016, Sven Eckelmann <sven@narfation.org>
+ * Copyright (c) 2012-2017, Sven Eckelmann <sven@narfation.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,39 +21,15 @@
  * THE SOFTWARE.
  */
 
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
+#include <assert.h>
 
-#include "../rbtree.h"
-#include "common.h"
-#include "common-treeops.h"
-#include "common-treevalidation.h"
+#include "../avltree.h"
 
-static uint16_t values[256];
-
-static struct rbitem items[ARRAY_SIZE(values)];
-static uint8_t skiplist[ARRAY_SIZE(values)];
+static DEFINE_AVLROOT(testtree);
 
 int main(void)
 {
-	struct rb_root root;
-	size_t i, j;
-
-	for (i = 0; i < 256; i++) {
-		random_shuffle_array(values, (uint16_t)ARRAY_SIZE(values));
-		memset(skiplist, 1, sizeof(skiplist));
-
-		INIT_RB_ROOT(&root);
-		for (j = 0; j < ARRAY_SIZE(values); j++) {
-			items[j].i = values[j];
-			rbitem_insert_unbalanced(&root, &items[j]);
-			skiplist[values[j]] = 0;
-
-			check_root_order(&root, skiplist,
-					 (uint16_t)ARRAY_SIZE(skiplist));
-		}
-	}
+	assert(avl_empty(&testtree));
 
 	return 0;
 }
