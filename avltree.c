@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /* Minimal AVL-tree helper functions
  *
- * SPDX-FileCopyrightText: 2012-2017, Sven Eckelmann <sven@narfation.org>
+ * SPDX-FileCopyrightText: Sven Eckelmann <sven@narfation.org>
  */
 
 #include "avltree.h"
