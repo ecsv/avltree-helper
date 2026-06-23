@@ -20,7 +20,7 @@ static void avl_set_parent(struct avl_node *node, struct avl_node *parent)
 	node->parent = parent;
 #else
 	node->parent_balance = (unsigned long)parent |
-			       (node->parent_balance & 3lu);
+			       (node->parent_balance & (uintptr_t)3);
 #endif
 }
 
@@ -35,7 +35,7 @@ static void avl_set_balance(struct avl_node *node,
 #ifndef AVL_PARENT_BALANCE_COMBINATION
 	node->balance = balance;
 #else
-	node->parent_balance = (node->parent_balance & ~3lu) | balance;
+	node->parent_balance = (node->parent_balance & ~(uintptr_t)3) | balance;
 #endif
 }
 

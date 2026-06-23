@@ -13,18 +13,19 @@ extern "C" {
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /* inject the balance info in the lowest two bits of the parent pointer */
 #define AVL_PARENT_BALANCE_COMBINATION
 
 #if defined(__GNUC__)
 #define AVLTREE_TYPEOF_USE 1
-#define AVL_NODE_ALIGNED __attribute__ ((aligned(sizeof(unsigned long))))
+#define AVL_NODE_ALIGNED __attribute__ ((aligned(sizeof(uintptr_t))))
 #endif
 
 #if defined(_MSC_VER)
 #define __inline__ __inline
-#define AVL_NODE_ALIGNED __declspec(align(sizeof(unsigned long)))
+#define AVL_NODE_ALIGNED __declspec(align(sizeof(uintptr_t)))
 #endif
 
 /**
@@ -83,7 +84,7 @@ struct avl_node {
 	struct avl_node *parent;
 	enum avl_node_balance balance;
 #else
-	unsigned long parent_balance;
+	uintptr_t parent_balance;
 #endif
 	struct avl_node *left;
 	struct avl_node *right;
@@ -137,7 +138,7 @@ static __inline__ struct avl_node *avl_parent(struct avl_node *node)
 #ifndef AVL_PARENT_BALANCE_COMBINATION
 	return node->parent;
 #else
-	return (struct avl_node *)(node->parent_balance & ~3lu);
+	return (struct avl_node *)(node->parent_balance & ~(uintptr_t)3);
 #endif
 }
 
@@ -152,7 +153,7 @@ static __inline__ enum avl_node_balance avl_balance(const struct avl_node *node)
 #ifndef AVL_PARENT_BALANCE_COMBINATION
 	return node->balance;
 #else
-	return (enum avl_node_balance)(node->parent_balance & 3lu);
+	return (enum avl_node_balance)(node->parent_balance & (uintptr_t)3);
 #endif
 }
 
@@ -170,7 +171,7 @@ static __inline__ void avl_set_parent_balance(struct avl_node *node,
 	node->parent = parent;
 	node->balance = balance;
 #else
-	node->parent_balance = (unsigned long)parent | balance;
+	node->parent_balance = (uintptr_t)parent | balance;
 #endif
 }
 
